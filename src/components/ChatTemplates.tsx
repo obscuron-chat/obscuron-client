@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { Person, PeerChat } from '../types';
+import type { Person, PeerChat, screenTypes } from '../types';
 
 interface ChatListProps {
     username: string;
@@ -21,6 +21,7 @@ interface ChatListProps {
         setChatData: React.Dispatch<React.SetStateAction<string>>;
         contacts: Person[];
     };
+    toggleScreen: (screen: screenTypes, hidden: boolean) => void;
 }
 
 interface TextListProps {
@@ -64,11 +65,15 @@ interface MultipleChat {
 
 type lastPerson = "null" | "self" | "peer";
 
-const ChatListBox: React.FC<ChatListProps> = ({ chatOperator, username }) => {
+const ChatListBox: React.FC<ChatListProps> = ({ chatOperator, username, toggleScreen }) => {
     // console.log("chatOperator.contacts:",chatOperator.contacts);
     // console.log("chatOperator.chatData:",chatOperator.chatData);
     return (
-        <div className={`${username == chatOperator.currentChat ? 'bg-gradient-to-r from-blue-700 to-blue-400 ' : ''}px-3 flex items-center cursor-pointer rounded-2xl`} onClick={()=>{chatOperator.setCurrentChat(username)}} >
+        <div className={`${username == chatOperator.currentChat ? 'bg-gradient-to-r from-blue-700 to-blue-400 ' : ''}px-3 flex items-center cursor-pointer rounded-2xl`} onClick={()=>{
+            chatOperator.setCurrentChat(username);
+            toggleScreen('chat', false);
+            toggleScreen('blank', true);
+        }} >
             <div>
                 <img className="h-12 w-12 min-w-12 rounded-full" src={chatOperator.currentChat ? chatOperator.contacts.filter((x: Person) => {return x.username == username})[0].imageURL : "https://cdn.obscuron.chat/placeholder.png"}/>
             </div>

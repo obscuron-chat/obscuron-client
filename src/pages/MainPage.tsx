@@ -171,7 +171,7 @@ const MainPage = () => {
     const loadChatList = () => {
         // console.log("loadChatList ", JSON.parse(chatData));
         const peerChatTemplates = JSON.parse(chatData).map((peerChat: PeerChat) => (
-            <ChatListBox key={peerChat.username} username={peerChat.username} chatOperator={chatOperator} />
+            <ChatListBox key={peerChat.username} username={peerChat.username} chatOperator={chatOperator} toggleScreen={toggleScreen} />
         ));
         setChatList(peerChatTemplates);
     };
