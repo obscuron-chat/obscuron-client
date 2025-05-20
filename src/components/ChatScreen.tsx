@@ -151,11 +151,15 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
             if (chatData[chatIdx].username == updatedChatOperator.currentChat) {
                 let peerChat = chatData.splice(chatIdx, 1)[0];
                 let newChat = JSON.parse(event.data)["message"];
+                console.log(`sha3_256(newChat["message"]) == newChat["hash"]:`, sha3_256(newChat["message"]) == newChat["hash"]);
+                console.log(`updatedChatOperator.contacts.filter((x: Person) => {return x.username == newChat["sender"]})[0].publicKey:`, updatedChatOperator.contacts.filter((x: Person) => {return x.username == newChat["sender"]})[0].publicKey);
+                console.log(`ec.keyFromPublic(updatedChatOperator.contacts.filter((x: Person) => {return x.username == newChat["sender"]})[0].publicKey, 'hex').verify(newChat["hash"], newChat["signature"]):`, ec.keyFromPublic(updatedChatOperator.contacts.filter((x: Person) => {return x.username == newChat["sender"]})[0].publicKey, 'hex').verify(newChat["hash"], newChat["signature"]));
                 newChat["verified"] = (
                     sha3_256(newChat["message"]) == newChat["hash"]
                 ) && (
                     ec.keyFromPublic(updatedChatOperator.contacts.filter((x: Person) => {return x.username == newChat["sender"]})[0].publicKey, 'hex').verify(newChat["hash"], newChat["signature"])
                 );
+                console.log(`newChat["verified"]:`, newChat["verified"]);
                 peerChat.textData.push(newChat);
                 chatData.unshift(peerChat);
                 break;

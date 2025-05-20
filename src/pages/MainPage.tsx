@@ -156,7 +156,7 @@ const MainPage = () => {
             setAuthPubkey(storedAuthPubkey);
         }
 
-        const storedAuthPrivateKey = localStorage.getItem('authPubkey');
+        const storedAuthPrivateKey = localStorage.getItem('authPrivateKey');
         if (storedAuthPrivateKey) {
             setAuthPrivateKey(storedAuthPrivateKey);
         }

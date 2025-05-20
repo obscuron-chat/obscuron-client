@@ -57,10 +57,15 @@ interface MultipleBubbleProps {
     isVerified?: boolean;
 }
 
-interface MultipleChat {
+interface MultiplePeerProps {
     imageURL: string;
     chats: string[];
-    isVerified?: boolean;
+    isVerified: boolean[];
+}
+
+interface MultipleSelfProps {
+    imageURL: string;
+    chats: string[];
 }
 
 type lastPerson = "null" | "self" | "peer";
@@ -131,7 +136,7 @@ const MultipleBubble: React.FC<MultipleBubbleProps> = ({ chat, isLast, isSelf, i
     );
 };
 
-const MultiplePeer: React.FC<MultipleChat> = ({ imageURL, chats, isVerified }) => {
+const MultiplePeer: React.FC<MultiplePeerProps> = ({ imageURL, chats, isVerified }) => {
     return (
         <div className="chat-message">
             <div className="flex items-end">
@@ -142,7 +147,7 @@ const MultiplePeer: React.FC<MultipleChat> = ({ imageURL, chats, isVerified }) =
                             chat={text}
                             isSelf={false} 
                             isLast={index === chats.length - 1}
-                            isVerified={isVerified}
+                            isVerified={isVerified[index]}
                         />
                     ))}
                 </div>
@@ -152,7 +157,7 @@ const MultiplePeer: React.FC<MultipleChat> = ({ imageURL, chats, isVerified }) =
     );
 };
 
-const MultipleSelf: React.FC<MultipleChat> = ({ imageURL, chats }) => {
+const MultipleSelf: React.FC<MultipleSelfProps> = ({ imageURL, chats }) => {
     return (
         <div className="chat-message">
             <div className="flex items-end justify-end">
@@ -178,11 +183,11 @@ const TextList: React.FC<TextListProps> = ({ chatOperator }) => {
     let multipleChatCheck: {
         lastPerson: lastPerson;
         chats: string[];
-        isVerified: boolean;
+        isVerified: boolean[];
     } = {
         lastPerson: "null",
         chats: [],
-        isVerified: true
+        isVerified: []
     };
 
     function pushHtml() {
@@ -196,7 +201,7 @@ const TextList: React.FC<TextListProps> = ({ chatOperator }) => {
             if (multipleChatCheck.chats.length > 1) {
                 chatHtml.push(<MultiplePeer imageURL={chatOperator.contacts.filter((x)=>{return x.username == chatOperator.currentChat})[0].imageURL} chats={multipleChatCheck.chats} isVerified={multipleChatCheck.isVerified} />);
             } else {
-                chatHtml.push(<StandalonePeer imageURL={chatOperator.contacts.filter((x)=>{return x.username == chatOperator.currentChat})[0].imageURL} text={multipleChatCheck.chats[0]} isVerified={multipleChatCheck.isVerified} />);
+                chatHtml.push(<StandalonePeer imageURL={chatOperator.contacts.filter((x)=>{return x.username == chatOperator.currentChat})[0].imageURL} text={multipleChatCheck.chats[0]} isVerified={multipleChatCheck.isVerified[0]} />);
             }
         }
     }
@@ -206,8 +211,9 @@ const TextList: React.FC<TextListProps> = ({ chatOperator }) => {
         if (!(multipleChatCheck.lastPerson === "null" || multipleChatCheck.lastPerson == chatStream)) {
             pushHtml();
             multipleChatCheck.chats = [];
+            multipleChatCheck.isVerified = [];
         }
-        multipleChatCheck.isVerified = multipleChatCheck.isVerified && chat.verified;
+        multipleChatCheck.isVerified.push(chat.verified);
         multipleChatCheck.chats.push(chattxt);
         multipleChatCheck.lastPerson = chatStream;
     }
