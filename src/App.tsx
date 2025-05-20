@@ -5,8 +5,8 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/chat" element={<MainPage />} />
-        <Route path="*" element={<Navigate to="/chat" replace />} />
+        <Route path="/" element={<MainPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
