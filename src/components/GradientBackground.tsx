@@ -6,7 +6,7 @@ const GradientBackground: React.FC = () => {
             <div 
                 className="relative -z-10 aspect-[1155/678] max-w-none -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#ff80b5] to-[#9089fc] opacity-30 left-[calc(50%-40rem)] w-[72.1875rem]" 
                 style={{
-                    clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)" // Simple rectangle
+                    clipPath: "polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)"
                 }}
             ></div>
         </div>

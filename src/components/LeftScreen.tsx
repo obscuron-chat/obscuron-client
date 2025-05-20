@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { screenTypes, Person } from '../types';
+import type { screenTypes, Person, PeerChat } from '../types';
 
 interface LeftScreenProps {
     toggleScreen: (screen: screenTypes, hidden: boolean) => void,
@@ -33,7 +33,7 @@ const LeftScreen: React.FC<LeftScreenProps> = ({ screenWidth, toggleScreen, chat
 
     const showAddContact = async () => {
         try {
-            const response = await fetch("http://localhost:8080/users", {
+            const response = await fetch(import.meta.env.VITE_BASE_API_URL + "/users", {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json",
@@ -45,11 +45,9 @@ const LeftScreen: React.FC<LeftScreenProps> = ({ screenWidth, toggleScreen, chat
             }
 
             const data = await response.json();
-            console.log("GET users successful:", data);
+            const filteredData = data.data.users.filter((x: PeerChat) => {return x.username != chatOperator.authUsername});
 
-            chatOperator.setContacts(data.data.users);
-
-            console.log(chatOperator.contacts);
+            chatOperator.setContacts(filteredData);
 
             toggleScreen('addcontact', false);
         } catch (error) {
@@ -60,7 +58,7 @@ const LeftScreen: React.FC<LeftScreenProps> = ({ screenWidth, toggleScreen, chat
     return (
         <div className="border-0 md:flex flex-col h-full" style={{ width: `${screenWidth}px` }}>
             <div className="h-0 w-0 md:hidden block"></div>
-            <div className="py-2 px-3 bg-gray-100 flex flex-row justify-between items-center">
+            <div className="py-2 px-3 flex flex-row justify-between items-center">
                 <div>
                     <button>
                         <img className="w-10 h-10 rounded-full cursor-pointer" src={chatOperator.profileImage} onClick={showSettings}/>
@@ -79,14 +77,14 @@ const LeftScreen: React.FC<LeftScreenProps> = ({ screenWidth, toggleScreen, chat
                     </button>
                 </div>
             </div>
-            <div className="py-2 px-2 bg-gray-50">
+            <div className="py-2 px-2">
                 <input
                     type="text"
                     className="w-full px-5 py-2 text-sm border rounded-3xl"
                     placeholder="Search chat"
                 />
             </div>
-            <div id="contactList" className="bg-gray-100 flex-1 overflow-auto">
+            <div id="contactList" className="flex-1 overflow-auto">
                 {chatList}
             </div>
         </div>

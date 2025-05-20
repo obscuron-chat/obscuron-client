@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 import { TextList } from "./ChatTemplates";
 
@@ -7,29 +7,31 @@ import type { Person, screenTypes } from '../types';
 import { ec as EC } from 'elliptic';
 import { sha3_256 } from 'js-sha3';
 
+interface ChatOperator {
+    authUsername: string;
+    setAuthUsername: React.Dispatch<React.SetStateAction<string>>;
+    authPubkey: string;
+    setAuthPubkey: React.Dispatch<React.SetStateAction<string>>;
+    authPrivateKey: string;
+    setAuthPrivateKey: React.Dispatch<React.SetStateAction<string>>;
+    profileName: string;
+    setProfileName: React.Dispatch<React.SetStateAction<string>>;
+    profileImage: string;
+    setProfileImage: React.Dispatch<React.SetStateAction<string>>;
+    currentChat: string;
+    setCurrentChat: React.Dispatch<React.SetStateAction<string>>;
+    chatData: string;
+    setChatData: React.Dispatch<React.SetStateAction<string>>;
+    contacts: Person[];
+    socket: WebSocket | null;
+    setSocket: React.Dispatch<React.SetStateAction<WebSocket | null>>;
+}
+
 interface ChatScreenProps {
     hidden: boolean;
     toggleScreen: (screen: screenTypes, hidden: boolean) => void;
     screenWidth: number;
-    chatOperator: {
-        authUsername: string;
-        setAuthUsername: React.Dispatch<React.SetStateAction<string>>;
-        authPubkey: string;
-        setAuthPubkey: React.Dispatch<React.SetStateAction<string>>;
-        authPrivateKey: string;
-        setAuthPrivateKey: React.Dispatch<React.SetStateAction<string>>;
-        profileName: string;
-        setProfileName: React.Dispatch<React.SetStateAction<string>>;
-        profileImage: string;
-        setProfileImage: React.Dispatch<React.SetStateAction<string>>;
-        currentChat: string;
-        setCurrentChat: React.Dispatch<React.SetStateAction<string>>;
-        chatData: string;
-        setChatData: React.Dispatch<React.SetStateAction<string>>;
-        contacts: Person[];
-        socket: WebSocket | null;
-        setSocket: React.Dispatch<React.SetStateAction<WebSocket | null>>;
-    };
+    chatOperator: ChatOperator;
 }
 
 const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWidth, chatOperator }) => {
@@ -57,14 +59,43 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
     }, []);
 
     const openPeerProfile = () => {
+        // console.log("chatOperator.chatData:", chatOperator.chatData);
         toggleScreen("peerprofile", false);
     };
 
     const ec = new EC('secp256k1');
     const keyPair = ec.keyFromPrivate(chatOperator.authPrivateKey);
 
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const minHeight = 48;
+    const maxHeight = 144;
+
+    const handleInput = () => {
+        const textarea = textareaRef.current;
+        if (!textarea) return;
+
+        textarea.style.height = 'auto';
+        const scrollHeight = textarea.scrollHeight;
+
+        if (scrollHeight < minHeight) {
+            textarea.style.height = `${minHeight}px`;
+        } else if (scrollHeight > maxHeight) {
+            textarea.style.height = `${maxHeight}px`;
+        } else {
+            const lineHeight = 24;
+            const lineCount = textarea.value.split('\n').length + 1;
+            textarea.style.height = `${lineCount * lineHeight}px`;
+        }
+    };
+
+    const encodeHTML = (text: string) => {
+        return text.replace(/[\x26\x0A\<>'"]/g,function(text){return"&#"+text.charCodeAt(0)+";"})
+    }
+
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        const textarea = textareaRef.current;
+        if (textarea) textarea.style.height = `${minHeight}px`;
         if (message.replace(/\n/gi,'').length > 0) {
             let text = message.split('\n');
             while (text[0] == "" || text[text.length-1] == "") {
@@ -77,20 +108,22 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
                 }
             }
             let chatData = JSON.parse(chatOperator.chatData);
-            for (let chatIdx in chatData) {
+            for (let chatIdx = 0;  chatIdx < chatData.length; chatIdx++) {
                 if (chatData[chatIdx].username == chatOperator.currentChat) {
                     let peerChat = chatData.splice(chatIdx, 1)[0];
+                    const messageHash = sha3_256(encodeHTML(text.join('\n')));
                     const newChat = {
                         "sender": chatOperator.authUsername,
                         "receiver": chatOperator.currentChat,
-                        "message": text.join("\n"),
-                        "hash": sha3_256(text.join("\n")),
-                        "signature": keyPair.sign(sha3_256(text.join("\n"))).toDER('hex'),
-                        "timestamp": new Date().toISOString(),
+                        "message": encodeHTML(text.join('\n')),
+                        "hash": messageHash,
+                        "signature": keyPair.sign(messageHash).toDER('hex'),
+                        "timestamp": new Date().toISOString()
                     };
                     peerChat.textData.push(newChat);
                     chatOperator.socket?.send(JSON.stringify(newChat));
-                    chatData.unshift(peerChat);    
+                    chatData.unshift(peerChat);
+                    break;
                 }
             }
             chatOperator.setChatData(JSON.stringify(chatData));
@@ -105,41 +138,59 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
         }
     };
 
+    const chatOperatorRef = useRef<ChatOperator>(chatOperator);
+
     useEffect(() => {
-        const ws = new WebSocket('ws://localhost:8080/room/' + (parseInt(sha3_256(chatOperator.currentChat), 16) + parseInt(sha3_256(chatOperator.authUsername), 16)).toString(16).slice(0,12));
+        chatOperatorRef.current = chatOperator;
+    }, [chatOperator]);
 
-        ws.onopen = () => {
-            console.log('WebSocket connection opened');
-        };
-
-        ws.onmessage = (event) => {
-            console.log('Message received:', event.data);
-            let chatData = JSON.parse(chatOperator.chatData);
-            for (let chatIdx in chatData) {
-                if (chatData[chatIdx].username == chatOperator.currentChat) {
-                    let peerChat = chatData.splice(chatIdx, 1)[0];
-                    const newChat = JSON.parse(event.data);
-                    peerChat.textData.push(newChat);
-                    chatData.unshift(peerChat);    
-                }
+    const incomingMessage = (event: MessageEvent<any>) => {
+        const updatedChatOperator = chatOperatorRef.current;
+        let chatData = JSON.parse(updatedChatOperator.chatData);
+        for (let chatIdx = 0; chatIdx < chatData.length; chatIdx++ ) {
+            if (chatData[chatIdx].username == updatedChatOperator.currentChat) {
+                let peerChat = chatData.splice(chatIdx, 1)[0];
+                let newChat = JSON.parse(event.data)["message"];
+                newChat["verified"] = (
+                    sha3_256(newChat["message"]) == newChat["hash"]
+                ) && (
+                    ec.keyFromPublic(updatedChatOperator.contacts.filter((x: Person) => {return x.username == newChat["sender"]})[0].publicKey, 'hex').verify(newChat["hash"], newChat["signature"])
+                );
+                peerChat.textData.push(newChat);
+                chatData.unshift(peerChat);
+                break;
             }
-            chatOperator.setChatData(JSON.stringify(chatData));
-        };
+        }
+        chatOperator.setChatData(JSON.stringify(chatData));
+    };
 
-        ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
+    useEffect(() => {
+        if (true) {
+            const ws = new WebSocket('ws://localhost:8080/room/' + (parseInt(sha3_256(chatOperator.currentChat), 16) + parseInt(sha3_256(chatOperator.authUsername), 16)).toString(16).slice(0,12));
 
-        ws.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
+            ws.onopen = () => {
+                console.log('WebSocket connection opened');
+            };
 
-        chatOperator.setSocket(ws);
+            ws.onmessage = (event) => {
+                incomingMessage(event);
+            };
 
-        // Clean up on component unmount
-        return () => {
-            ws.close();
-        };
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket connection closed');
+            };
+
+            chatOperator.setSocket(ws);
+
+            // Clean up on component unmount
+            return () => {
+                ws.close();
+            };
+        }
     }, []);
 
     return (
@@ -172,7 +223,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
                             </span>
                             <img
                                 id="peerImgURL"
-                                src={`${chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].imageUrl : "https://cdn.obscuron.chat/placeholder.png"}`}
+                                src={chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].imageURL : "https://cdn.obscuron.chat/placeholder.png"}
                                 alt=""
                                 className="w-10 h-10 min-w-10 rounded-full"
                             />
@@ -182,7 +233,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
                                 <span
                                     className="text-gray-700 mr-3 font-semibold"
                                     id="peerName"
-                                >{chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].name : ""}</span>
+                                >{chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].profileName : ""}</span>
                             </div>
                         </div>
                     </div>
@@ -223,11 +274,13 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
                         <div className="relative flex flex-row">
                             <div id="sendOrSearch" className="flex flex-1">
                                 <textarea
+                                    ref={textareaRef}
                                     id="typing"
                                     placeholder="Type a message"
                                     form="chatForm"
                                     rows={1}
                                     value={message}
+                                    onInput={handleInput}
                                     onChange={handleChange}
                                     onKeyDown={handleKeyDown}
                                     className="resize-none w-full focus:outline-none focus:placeholder-gray-400 text-gray-600 placeholder-gray-600 px-12 bg-gray-200 rounded-3xl py-3"

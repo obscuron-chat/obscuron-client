@@ -30,8 +30,6 @@ interface AuthScreenProps {
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ hidden, toggleScreen, chatOperator }) => {
-    console
-
     type Status = 'signIn' | 'signUp';
     const [authState, setAuthState] = useState<Status>('signIn');
     const updateState = () => {
@@ -57,7 +55,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ hidden, toggleScreen, chatOpera
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         try {
-            const response = await fetch("http://localhost:8080/auth", {
+            const response = await fetch(import.meta.env.VITE_BASE_API_URL + "/auth", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -72,6 +70,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ hidden, toggleScreen, chatOpera
             const data = await response.json();
             console.log("Auth successful:", data);
 
+            chatOperator.setProfileName(data.data.profileName);
             chatOperator.setjwtToken(data.data.token);
 
             toggleScreen("auth", true);

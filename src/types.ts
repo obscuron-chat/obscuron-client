@@ -1,7 +1,7 @@
 export interface Person {
     username: string;
-    name: string;
-    imageUrl: string;
+    profileName: string;
+    imageURL: string;
     publicKey: string;
 }
 
@@ -14,6 +14,7 @@ export interface TextData {
     hash: string;
     signature: string;
     timestamp: string;
+    verified: boolean;
 }
 
 export interface PeerChat {

@@ -28,8 +28,8 @@ const MainPage = () => {
     const [contacts, setContacts] = useState<Person[]>([{
         username: "faiz",
         publicKey: "048516b9513070d51ee673870eee16b6e8bb9d5e79ec9ea1e6a2b8729ef99cfdb901b59132d9ed21c7416636cdac55345a6a6b70e720c00ca5416ee0834ae2e843",
-        imageUrl: "https://cdn.obscuron.chat/placeholder.png",
-        name: "Faiz"
+        imageURL: "https://cdn.obscuron.chat/placeholder.png",
+        profileName: "Faiz"
     }]);
 
     const [socket, setSocket] = useState<WebSocket | null>(null);
@@ -38,13 +38,13 @@ const MainPage = () => {
     //     {
     //         id: 'leslie',
     //         name: 'Leslie Alexander',
-    //         imageUrl:
+    //         imageURL:
     //         'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
     //         publicKey: '04fa4e15a78f92ea7dc550bc026a65445d280a7009e6fa632c266a5bc4e305e3d78599ede4c9d21e134c159b7a2abcd24fe28bc47fcb0df7bcc923db27ea3765ce'
     //     },{
     //         id: 'michael',
     //         name: 'Michael Foster',
-    //         imageUrl:
+    //         imageURL:
     //         'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=8&w=1024&h=1024&q=80',
     //         publicKey: '04220dae4098514109277088d444d54368ef088487162fe2d1c2ea374cda85c45abeb3ecb0ef7d03c9fd77b9cd423b03e624733082fd5858d34436cfbf9ae8be31'
     //     }
@@ -93,7 +93,6 @@ const MainPage = () => {
     const isResizing = useRef(false);
 
     const startResizing = () => {
-        console.log(chatListWidth);
         isResizing.current = true;
     };
 
@@ -165,12 +164,22 @@ const MainPage = () => {
         const storedjwtToken = localStorage.getItem('jwtToken');
         if (storedjwtToken) {
             setjwtToken(storedjwtToken);
+            toggleScreen("auth", true);
         }
     }, []);
+
+    const loadChatList = () => {
+        // console.log("loadChatList ", JSON.parse(chatData));
+        const peerChatTemplates = JSON.parse(chatData).map((peerChat: PeerChat) => (
+            <ChatListBox key={peerChat.username} username={peerChat.username} chatOperator={chatOperator} />
+        ));
+        setChatList(peerChatTemplates);
+    };
 
     useEffect(() => {
         if (chatData) {
             localStorage.setItem('chatData', chatData);
+            loadChatList();
         }
     }, [chatData]);
 
@@ -199,17 +208,14 @@ const MainPage = () => {
     }, [jwtToken]);
 
     useEffect(() => {
-        const peerChatTemplates = JSON.parse(chatData).map((peerChat: PeerChat) => (
-            <ChatListBox key={peerChat.username} username={peerChat.username} chatOperator={chatOperator} />
-        ));
-        setChatList(peerChatTemplates);
+        loadChatList();
     }, [chatData, currentChat]);
         
     return (
         <div className="flex w-screen h-screen">
             <GradientBackground />
             <LeftScreen toggleScreen={toggleScreen} screenWidth={chatListWidth} chatOperator={chatOperator} chatList={chatList} />
-            <div className="w-0.5 bg-gray-100 cursor-col-resize z-10" onMouseDown={startResizing} onTouchStart={startResizing}></div>
+            <div className="w-0.5 cursor-col-resize z-10" onMouseDown={startResizing} onTouchStart={startResizing}></div>
             <BlankScreen hidden={screens.blank} screenWidth={chatListWidth}/>
             <ChatScreen hidden={screens.chat} toggleScreen={toggleScreen} screenWidth={chatListWidth} chatOperator={chatOperator} />
             <AuthScreen hidden={screens.auth} toggleScreen={toggleScreen} chatOperator={chatOperator} />

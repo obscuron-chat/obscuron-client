@@ -32,7 +32,7 @@ const PeerProfile: React.FC<PeerProfileProps> = ({ hidden, toggleScreen, chatOpe
     return (
         <div id="peerProfile" className={`relative z-10${hidden ? ' hidden' : ''}`} aria-labelledby="peerProfileTitle" role="dialog" aria-modal="true">
             <div className="fixed inset-0 bg-gray-500 opacity-75 transition-opacity"></div>              
-            <div className="triggerBlurbg fixed inset-0 overflow-y-auto z-10">
+            <div className="triggerBlurbg fixed inset-0 overflow-y-auto z-10" onClick={closePeerProfile}>
                 <div className="blurbg flex min-h-full items-center justify-center p-4 text-center">
                     <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                         <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
@@ -42,14 +42,14 @@ const PeerProfile: React.FC<PeerProfileProps> = ({ hidden, toggleScreen, chatOpe
                                     <div className="flex flex-1 max-w-fit center bg-grey-light rounded-2xl">
                                         <div className="items-center flex">
                                             <div className="relative h-24 w-24">
-                                                <img id="peerProfileImgURL" src={chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].imageUrl : "https://cdn.obscuron.chat/placeholder.png"} alt={chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].name : ""} className="w-24 h-24 min-w-24 rounded-full" />
+                                                <img id="peerProfileImgURL" src={chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].imageURL : "https://cdn.obscuron.chat/placeholder.png"} alt={chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].profileName : ""} className="w-24 h-24 min-w-24 rounded-full" />
                                             </div>
                                         </div>
                                         <div className="ml-4 flex-1 py-4 flex flex-col justify-center">
                                             <div className="flex flex-row">
                                                 <p id="peerProfileusername">Username : {chatOperator.currentChat ? chatOperator.currentChat : ""}</p>
                                             </div>
-                                            <p id="peerProfileName">Name : {chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].name : ""}</p>
+                                            <p id="peerProfileName">Name : {chatOperator.currentChat ? chatOperator.contacts.filter((x) => {return x.username == chatOperator.currentChat})[0].profileName : ""}</p>
                                         </div>
                                     </div>
                                 </div>

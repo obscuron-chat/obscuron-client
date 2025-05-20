@@ -39,7 +39,7 @@ const AddContact: React.FC<AddContactProps> = ({ hidden, toggleScreen, chatOpera
         query === ''
         ? chatOperator.contacts
         : chatOperator.contacts.filter((person) =>
-            person.name.toLowerCase().includes(query.toLowerCase())
+            person.profileName.toLowerCase().includes(query.toLowerCase())
             );
 
     const closeAddContact = () => {
@@ -53,10 +53,12 @@ const AddContact: React.FC<AddContactProps> = ({ hidden, toggleScreen, chatOpera
         if (selectedPerson && chatData.filter((x: PeerChat) => {return x.username == selectedPerson.username}).length == 0) {
             chatOperator.setCurrentChat(selectedPerson ? selectedPerson.username : '');
             chatData.unshift({
-                username: selectedPerson?.username,
+                username: selectedPerson.username,
                 textData: []
             });
+            // console.log("chatData:", chatData);
             chatOperator.setChatData(JSON.stringify(chatData));
+            // console.log("chatOperator.chatData:", chatOperator.chatData);
             toggleScreen('addcontact', true);
             toggleScreen('chat', false);
             toggleScreen('blank', true);
@@ -108,12 +110,12 @@ const AddContact: React.FC<AddContactProps> = ({ hidden, toggleScreen, chatOpera
                                                             )
                                                         }
                                                     >
-                                                        {({ active, selected }) => (
+                                                        {({ selected }) => (
                                                             <>
                                                                 <div className="flex items-center">
                                                                     <img
-                                                                        src={person.imageUrl}
-                                                                        alt=""
+                                                                        src={person.imageURL ? person.imageURL : "asdsna"}
+                                                                        alt={person.username}
                                                                         className="h-6 w-6 flex-shrink-0 rounded-full"
                                                                     />
                                                                     <span
@@ -122,15 +124,15 @@ const AddContact: React.FC<AddContactProps> = ({ hidden, toggleScreen, chatOpera
                                                                         selected && 'font-semibold'
                                                                         )}
                                                                     >
-                                                                        {person.name} (@{person.username})
+                                                                        {person.profileName} (@{person.username})
                                                                     </span>
                                                                 </div>
 
                                                                 {selected && (
                                                                 <span
                                                                     className={classNames(
-                                                                        'absolute inset-y-0 right-0 flex items-center pr-4',
-                                                                        active ? 'text-white' : 'text-indigo-600'
+                                                                        'absolute inset-y-0 right-0 flex items-center pr-4 text-indigo-600',
+                                                                        'aria-selected:text-white'
                                                                     )}
                                                                 >
                                                                     <CheckIcon className="h-5 w-5" aria-hidden="true" />
@@ -153,7 +155,7 @@ const AddContact: React.FC<AddContactProps> = ({ hidden, toggleScreen, chatOpera
                                         <img
                                             id="searchContactResultsImg"
                                             className="h-12 w-12 min-w-12 rounded-full"
-                                            src={selectedPerson?.imageUrl ? selectedPerson?.imageUrl : "https://cdn.obscuron.chat/placeholder.png" }
+                                            src={selectedPerson?.imageURL ? selectedPerson?.imageURL : "https://cdn.obscuron.chat/placeholder.png" }
                                             alt=""
                                         />
                                     </div>
@@ -163,7 +165,7 @@ const AddContact: React.FC<AddContactProps> = ({ hidden, toggleScreen, chatOpera
                                                 id="searchContactResultsName"
                                                 data-peerid=""
                                                 className="text-black max-w-180"
-                                            >{selectedPerson?.name}</p>
+                                            >{selectedPerson?.profileName}</p>
                                         </div>
                                     </div>
                                     <button

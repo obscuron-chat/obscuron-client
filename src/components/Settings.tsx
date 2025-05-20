@@ -46,7 +46,7 @@ const Settings: React.FC<SettingsProps> = ({ hidden, toggleScreen, chatOperator 
         e.preventDefault();
         if (chatOperator.profileName != '') {
             try {
-                const response = await fetch("http://localhost:8080/profile", {
+                const response = await fetch(import.meta.env.VITE_BASE_API_URL + "/profile", {
                     method: "POST",
                     headers: {
                         'Authorization': `Bearer ${chatOperator.jwtToken}`,
