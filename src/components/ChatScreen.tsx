@@ -166,7 +166,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ hidden, toggleScreen, screenWid
 
     useEffect(() => {
         if (true) {
-            const ws = new WebSocket(import.meta.env.VITE_BASE_API_URL + '/room/' + (parseInt(sha3_256(chatOperator.currentChat), 16) + parseInt(sha3_256(chatOperator.authUsername), 16)).toString(16).slice(0,12));
+            const ws = new WebSocket(import.meta.env.VITE_BASE_API_WEBSOCKET_URL + '/room/' + (parseInt(sha3_256(chatOperator.currentChat), 16) + parseInt(sha3_256(chatOperator.authUsername), 16)).toString(16).slice(0,12));
 
             ws.onopen = () => {
                 console.log('WebSocket connection opened');
